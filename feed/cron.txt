@@ -1,0 +1,9 @@
+######################################################################
+#                         LIVEPRICES:4007                            #
+######################################################################
+10 3 * * * pm2 start -i 1 /root/TBOT/LIVEPRICES/server.js --name LIVEPRICES
+0  8 * * * python3 /root/TBOT/LIVEPRICES/scripts/createInstrumentID.py > /root/TBOT/LIVEPRICES/logs/createInstrumentID.log
+40 8 * * * python3 /root/TBOT/LIVEPRICES/scripts/autoLoginFeed.py      > /root/TBOT/LIVEPRICES/logs/autoLoginFeed.log
+42 8 * * * python3 /root/TBOT/LIVEPRICES/scripts/autoLoginFeed.py      > /root/TBOT/LIVEPRICES/logs/autoLoginFeed.log
+44 8 * * * python3 /root/TBOT/LIVEPRICES/scripts/autoLoginFeed.py      > /root/TBOT/LIVEPRICES/logs/autoLoginFeed.log
+0  9 * * * pm2 restart LIVEPRICES

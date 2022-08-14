@@ -1,0 +1,26 @@
+{
+  "name": "live-feed",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "kiteconnect": "^4.0.0",
+    "mongoose": "^6.1.1",
+    "node-cron": "^3.0.0",
+    "node-telegram-bot-api": "^0.56.0",
+    "nodemon": "^2.0.15",
+    "pg": "^8.7.3",
+    "request": "^2.88.2",
+    "socket.io": "^4.5.0"
+  }
+}

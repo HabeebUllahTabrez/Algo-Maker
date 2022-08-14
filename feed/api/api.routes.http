@@ -1,0 +1,39 @@
+###  Install RESTCLIENT package for VSCODE 
+GET http://localhost:4007/api/ 
+
+
+###  Login Feed to subscribe automatically 
+GET http://localhost:4007/api/feed/login
+
+
+### Get Feed status if logged in or not 
+GET http://localhost:4007/api/feed/status
+
+
+###  If Access token is updated 
+GET http://localhost:4007/api/params
+
+###  
+GET http://localhost:4007/api/expiry
+
+
+###  
+GET http://localhost:4007/api/subscriptions
+
+
+### 
+GET http://localhost:4007/api/instrumentid?instrument=NFO:NIFTY21NOVFUT
+
+###  LTP , VWAP , OI , VOL 
+GET http://localhost:4007/api/LTP?instrument=NSE:SBIN
+
+
+###  LTP , VWAP , OI , VOL 
+GET http://localhost:4007/api/LTP?instrument=NSE:SBIN
+
+
+###  LTP , VWAP , OI , VOL 
+GET http://localhost:4007/api/LTP?instrument=NFO:HDFCBANK21NOVFUT
+
+
+

@@ -1,0 +1,25 @@
+[{
+  "_id": {
+    "$oid": "627210d6487e8e0fd4c166da"
+  },
+  "future": "NFO:NIFTY22APRFUT",
+  "instrument_token": 13747458
+},{
+  "_id": {
+    "$oid": "627210d6487e8e0fd4c166db"
+  },
+  "future": "NFO:BANKNIFTY22APRFUT",
+  "instrument_token": 18257666
+},{
+  "_id": {
+    "$oid": "62735fe9e628189890b9a077"
+  },
+  "future": "NFO: BANKNIFTY22MAYFUT",
+  "instrument_token": 11176962
+},{
+  "_id": {
+    "$oid": "6273602ce628189890b9a078"
+  },
+  "future": "NFO: NIFTY22MAYFUT",
+  "instrument_token": 11177218
+}]
