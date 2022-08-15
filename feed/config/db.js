@@ -3,7 +3,7 @@
 const nconf = require("nconf");
 const path = require("path");
 const mongoose = require("mongoose");
-var firebase = require("firebase/app");
+// var firebase = require("firebase/app");
 const logger = require("pino")();
 require("dotenv").config();
 
@@ -26,9 +26,9 @@ module.exports["db"] = db;
 
 //-----------------------------------------------------------FirebaseConfiguration-------------------------------------------------------//
 
-require("firebase/auth");
-var firebaseConfig = nconf.get("FIREBASE_CONFIG");
-firebase.initializeApp(firebaseConfig);
-logger.info("Firebase Initialized Successfully!!");
+// require("firebase/auth");
+// var firebaseConfig = nconf.get("FIREBASE_CONFIG");
+// firebase.initializeApp(firebaseConfig);
+// logger.info("Firebase Initialized Successfully!!");
 
 //---------------------------------------------------------------------------------------------------------------------------------------//
