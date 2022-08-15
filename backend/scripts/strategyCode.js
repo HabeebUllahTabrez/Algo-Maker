@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require("uuid");
 const cron = require("node-cron");
 const Strategy = require("../models/strategies");
 const Order = require("../models/orders");
+const Account = require("../models/accounts");
 const futureTables = require("../models/futureTables");
 const { placeTrade, getOrder } = require("../broker/zerodha/placeTrade");
 const { evaluateIndicatorValue } = require("./evaluateIndicators");
@@ -12,8 +13,6 @@ const Utils = require("../utils");
 const URL = process.env.BACKEND_URL;
 let apiKey = credData.api_key;
 let accessToken = credData.access_token;
-
-let prevIndicatorResults = [];
 
 const getAllStrategiesForExecution = async () => {
   try {
@@ -89,7 +88,7 @@ async function strategyCustom(strategy) {
 
       let transformedOrderSymbol;
 
-      prevIndicatorResults = [];
+      let prevIndicatorResults = [];
 
       let price;
       let pairId;
@@ -138,7 +137,8 @@ async function strategyCustom(strategy) {
             dataSymbol,
             timeFrame,
             candleParam,
-            direction
+            direction,
+            prevIndicatorResults
           );
           console.log(indicatorResults);
         } catch (error) {
@@ -305,7 +305,8 @@ const getBuySellArray = async (
   dataSymbol,
   timeFrame,
   candleParam,
-  direction
+  direction,
+  prevIndicatorResults
 ) => {
   const indicatorResults = [];
 
@@ -480,7 +481,7 @@ async function checkForSLandTarget(
       let SL, targetPrice, LTP;
       let trailFactor = 1;
       let originalSL;
-      prevIndicatorResults = [];
+      let prevIndicatorResults = [];
 
       let exitOrder;
 
@@ -663,7 +664,8 @@ async function checkForSLandTarget(
                 dataSymbol,
                 timeFrame,
                 candleParam,
-                direction
+                direction,
+                prevIndicatorResults
               );
               console.log(indicatorResults);
             } catch (error) {
@@ -749,7 +751,8 @@ async function checkForSLandTarget(
                 dataSymbol,
                 timeFrame,
                 candleParam,
-                direction
+                direction,
+                prevIndicatorResults
               );
               console.log(indicatorResults);
             } catch (error) {
