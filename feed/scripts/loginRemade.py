@@ -24,7 +24,7 @@ import time
 
 load_dotenv()
 
-MONGODB_URL = os.getenv('DATABASE')
+MONGODB_URL = os.getenv('DB_HOST')
 
 
 # For Windows

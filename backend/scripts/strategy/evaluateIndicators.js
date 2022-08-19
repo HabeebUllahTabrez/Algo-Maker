@@ -1,4 +1,4 @@
-const Indicators = require("../indicators");
+const Indicators = require("./indicators");
 
 const evaluateIndicatorValue = async (
   indicator,

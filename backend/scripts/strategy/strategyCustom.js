@@ -1,53 +1,11 @@
-const fetch = require("isomorphic-fetch");
-const zerodhaTrade = require("../broker/zerodha/trade");
+const Utils = require("../../utils");
 const { v4: uuidv4 } = require("uuid");
 const cron = require("node-cron");
-const Strategy = require("../models/strategies");
-const Order = require("../models/orders");
-const Account = require("../models/accounts");
-const futureTables = require("../models/futureTables");
-const { placeTrade, getOrder } = require("../broker/zerodha/placeTrade");
+const Order = require("../../models/orders");
+const Account = require("../../models/accounts");
+const futureTables = require("../../models/futureTables");
+const { placeTrade, getOrder } = require("../../broker/zerodha/placeTrade");
 const { evaluateIndicatorValue } = require("./evaluateIndicators");
-const credData = require("../data/credentials.json");
-const Utils = require("../utils");
-const URL = process.env.BACKEND_URL;
-let apiKey = credData.api_key;
-let accessToken = credData.access_token;
-
-const getAllStrategiesForExecution = async () => {
-  try {
-    let strategies = await Strategy.find({ active: true })
-      .populate("user")
-    return strategies;
-  } catch (error) {
-    return error;
-  }
-};
-
-async function main() {
-  try {
-    let strategies = await getAllStrategiesForExecution();
-    // console.log("strategies: ", strategies);
-    let newPromise;
-
-    if (strategies.length > 0) {
-      // for (let i = 0; i < 1; i++) {
-      //   strategyCustom(strategies[i]);
-      // }
-      newPromise = strategies.map((strategy) => {
-        return new Promise((resolve, reject) => {
-          strategyCustom(strategy);
-        });
-      });
-
-      Promise.all(newPromise);
-    } else {
-      console.log("No strategies for execution!");
-    }
-  } catch (error) {
-    console.log(error);
-  }
-}
 
 async function strategyCustom(strategy) {
   return new Promise(async (resolve, reject) => {
@@ -75,7 +33,11 @@ async function strategyCustom(strategy) {
       let timeFrame = strategy.timeFrame;
       let direction = strategy.direction;
       let orderType = strategy.orderType;
-      let account = await Account.findOne({ user: strategy.user, isDefault: true })
+      let account = await Account.findOne({
+        user: strategy.user,
+        isDefault: true,
+      });
+      let maxOrders = strategy.maxOrders;
 
       let quantity = strategy.quantity;
       let stopLoss = strategy.stopLoss;
@@ -98,6 +60,8 @@ async function strategyCustom(strategy) {
       let shouldBuy, shouldSell;
 
       let isError;
+      let count = 0;
+      let ordered = false;
 
       // console.log(account);
       await Utils.waitForTime(entryHour, entryMinute, 0);
@@ -122,178 +86,224 @@ async function strategyCustom(strategy) {
           transformedOrderSymbol = "NFO:" + transformedOrderSymbol + fut_name;
         });
 
-      // transformedOrderSymbol = "NSE:RBLBANK";
+      transformedOrderSymbol = "NSE:RBLBANK";
       console.log("Symbol to be ordered: ", transformedOrderSymbol);
 
-      const strategyTask = cron.schedule(`0 */${timeFrame} * * * *`, async () => {
-        let entryOrder, exitOrder;
-        let ordered = false;
+      const strategyTask = cron.schedule(
+        `2 */${timeFrame} * * * *`,
+        async () => {
+          if (!ordered) {
+            let entryOrder, exitOrder;
 
-        let indicatorResults;
+            let indicatorResults;
 
-        try {
-          indicatorResults = await getBuySellArray(
-            indicators,
-            dataSymbol,
-            timeFrame,
-            candleParam,
-            direction,
-            prevIndicatorResults
-          );
-          console.log(indicatorResults);
-        } catch (error) {
-          console.log("Error occured in evaluating strategies!");
-          console.log(error);
-        }
-
-        shouldOrder =
-          (indicatorResults.every((element) => element === "BUY") ||
-            indicatorResults.every((element) => element === "SELL")) &&
-          indicatorResults.length === indicators.length;
-
-        shouldBuy = indicatorResults.every((element) => element === "BUY");
-        shouldSell = indicatorResults.every((element) => element === "SELL");
-
-        console.log("Whether we are going to order or not: ", shouldOrder);
-
-        if (shouldOrder) {
-          if (direction !== "BOTH") {
-            let message = direction === "BUY" ? "Buying" : "Selling";
-            console.log(message);
-            pairId = uuidv4();
             try {
-              entryOrder = await makeOrder(
-                account,
-                transformedOrderSymbol,
+              indicatorResults = await getBuySellArray(
+                indicators,
+                dataSymbol,
+                timeFrame,
+                candleParam,
                 direction,
-                quantity,
-                orderType,
-                exchange,
-                "Indicator entry",
-                pairId
+                prevIndicatorResults
               );
-
-              price = entryOrder.price;
-              ordered = true;
-              orderStatus = direction === "BUY" ? "Bought" : "Sold";
-
-              Utils.print("Entry Order: ", entryOrder);
+              console.log(indicatorResults);
             } catch (error) {
+              console.log("Error occured in evaluating strategies!");
               console.log(error);
             }
-          } else if (direction === "BOTH") {
-            if (shouldBuy && orderStatus !== "Bought") {
-              let message = "Buying";
-              pairId = uuidv4();
-              console.log(message);
-              try {
-                entryOrder = await makeOrder(
-                  account,
-                  transformedOrderSymbol,
-                  "BUY",
-                  quantity,
-                  orderType,
-                  exchange,
-                  "Indicator entry",
-                  pairId
-                );
 
-                price = entryOrder.price;
-                ordered = true;
-                orderStatus = "Bought";
+            shouldOrder =
+              (indicatorResults.every((element) => element === "BUY") ||
+                indicatorResults.every((element) => element === "SELL")) &&
+              indicatorResults.length === indicators.length;
 
-                Utils.print("Entry Order: ", entryOrder);
-              } catch (error) {
-                console.log(error);
+            shouldBuy = indicatorResults.every((element) => element === "BUY");
+            shouldSell = indicatorResults.every(
+              (element) => element === "SELL"
+            );
+
+            console.log("Whether we are going to order or not: ", shouldOrder);
+
+            if (shouldOrder) {
+              if (direction !== "BOTH") {
+                let message = direction === "BUY" ? "Buying" : "Selling";
+                console.log(message);
+                pairId = uuidv4();
+                try {
+                  entryOrder = await makeOrder(
+                    account,
+                    transformedOrderSymbol,
+                    direction,
+                    quantity,
+                    orderType,
+                    exchange,
+                    "Indicator entry",
+                    pairId
+                  );
+
+                  if (!entryOrder) {
+                    isError = true;
+                  } else {
+                    count++;
+
+                    price = entryOrder.price;
+                    ordered = true;
+                    orderStatus = direction === "BUY" ? "Bought" : "Sold";
+
+                    Utils.print("Entry Order: ", entryOrder);
+                  }
+                } catch (error) {
+                  console.log(error);
+                }
+              } else if (direction === "BOTH") {
+                if (shouldBuy && orderStatus !== "Bought") {
+                  let message = "Buying";
+                  pairId = uuidv4();
+                  console.log(message);
+                  try {
+                    entryOrder = await makeOrder(
+                      account,
+                      transformedOrderSymbol,
+                      "BUY",
+                      quantity,
+                      orderType,
+                      exchange,
+                      "Indicator entry",
+                      pairId
+                    );
+                    if (!entryOrder) {
+                      isError = true;
+                    } else {
+                      count++;
+
+                      price = entryOrder.price;
+                      ordered = true;
+                      orderStatus = "Bought";
+
+                      Utils.print("Entry Order: ", entryOrder);
+                    }
+                  } catch (error) {
+                    console.log(error);
+                  }
+                } else if (shouldSell && orderStatus !== "Sold") {
+                  let message = "Selling";
+                  pairId = uuidv4();
+                  console.log(message);
+                  try {
+                    entryOrder = await makeOrder(
+                      account,
+                      transformedOrderSymbol,
+                      "SELL",
+                      quantity,
+                      orderType,
+                      exchange,
+                      "Indicator entry",
+                      pairId
+                    );
+                    if (!entryOrder) {
+                      isError = true;
+                    } else {
+                      count++;
+
+                      price = entryOrder.price;
+                      ordered = true;
+                      orderStatus = "Sold";
+
+                      Utils.print("Entry Order: ", entryOrder);
+                    }
+                  } catch (error) {
+                    console.log(error);
+                  }
+                }
               }
-            } else if (shouldSell && orderStatus !== "Sold") {
-              let message = "Selling";
-              pairId = uuidv4();
-              console.log(message);
-              try {
-                entryOrder = await makeOrder(
-                  account,
+
+              if (price === 0) {
+                console.log("Order Failed! Unable to make a successful order!");
+                isError = true;
+              }
+
+              if (ordered && !isError) {
+                const exitOrder = await checkForSLandTarget(
                   transformedOrderSymbol,
-                  "SELL",
+                  account,
+                  stopLoss,
+                  target,
+                  direction,
                   quantity,
+                  price,
                   orderType,
                   exchange,
-                  "Indicator entry",
-                  pairId
+                  stopLossUnit,
+                  targetUnit,
+                  trailSLXPoint,
+                  trailSLYPoint,
+                  exitHour,
+                  exitMinute,
+                  dataSymbol,
+                  candleParam,
+                  timeFrame,
+                  orderStatus,
+                  pairId,
+                  indicators
                 );
 
-                price = entryOrder.price;
-                ordered = true;
-                orderStatus = "Sold";
+                ordered = false;
 
-                Utils.print("Entry Order: ", entryOrder);
-              } catch (error) {
-                console.log(error);
+                // This has to be commented so that the trades are placed alternatively
+                // orderStatus = exitOrder.direction === "BUY" ? "Bought" : "Sold";
+                console.log("Exit Order: ", exitOrder);
               }
             }
           }
-
-          if (price === 0) {
-            console.log("Order Failed! Unable to make a successful order!");
-            isError = true;
-          }
-
-          if (ordered && !isError) {
-            const exitOrder = await checkForSLandTarget(
-              transformedOrderSymbol,
-              account,
-              stopLoss,
-              target,
-              direction,
-              quantity,
-              price,
-              orderType,
-              exchange,
-              stopLossUnit,
-              targetUnit,
-              trailSLXPoint,
-              trailSLYPoint,
-              exitHour,
-              exitMinute,
-              dataSymbol,
-              candleParam,
-              timeFrame,
-              orderStatus,
-              pairId,
-              indicators
-            );
-
-            // This has to be commented so that the trades are placed alternatively
-            // orderStatus = exitOrder.direction === "BUY" ? "Bought" : "Sold";
-            console.log("Exit Order: ", exitOrder);
-          }
         }
-      });
+      );
 
-      setInterval(() => {
+      let timeInterval = setInterval(() => {
         let currentTime = new Date();
-        if(isError) {
+        if (isError) {
           Utils.print("An error occured!");
           strategyTask.stop();
-        }
-        
-        if (
-          currentTime.getHours() >= exitHour &&
-          currentTime.getMinutes() >= exitMinute
+          clearInterval(timeInterval);
+        } else if (count === maxOrders) {
+          Utils.print("Max Orders limit reached!");
+          strategyTask.stop();
+          clearInterval(timeInterval);
+        } else if (
+          currentTime.getHours() >= exitHour ||
+          (currentTime.getHours() >= exitHour &&
+            currentTime.getMinutes() >= exitMinute)
         ) {
           Utils.print("Strategy exitted");
           strategyTask.stop();
-        }
-
-        if (
+          clearInterval(timeInterval);
+        } else if (
           currentTime.getHours() == exitHour &&
           currentTime.getMinutes() == exitMinute
         ) {
           Utils.print("Strategy exitted: Exit time reached");
           strategyTask.stop();
+          clearInterval(timeInterval);
         }
-      }, 1 * 60 * 1000)
+      }, timeFrame * 10 * 1000);
 
+      let currentTime = new Date();
+      
+      if (
+        currentTime.getHours() >= exitHour ||
+        (currentTime.getHours() >= exitHour &&
+          currentTime.getMinutes() >= exitMinute)
+      ) {
+        Utils.print("Strategy exitted");
+        strategyTask.stop();
+        clearInterval(timeInterval);
+      } else if (
+        currentTime.getHours() == exitHour &&
+        currentTime.getMinutes() == exitMinute
+      ) {
+        Utils.print("Strategy exitted: Exit time reached");
+        strategyTask.stop();
+        clearInterval(timeInterval);
+      }
     } catch (error) {
       reject(error);
     }
@@ -553,29 +563,29 @@ async function checkForSLandTarget(
         // LTP = 1;
         LTP = await Utils.getLTP(orderSymbol);
 
-        if (orderStatus === "Bought") {
-          if (LTP >= price + +trailSLXPoint * trailFactor) {
-            SL = originalSL + +trailSLYPoint * trailFactor;
-            SL.toFixed(2);
-            trailFactor = Math.floor((LTP - price) / +trailSLXPoint) + 1;
-            console.log(
-              "Next Trail factor:",
-              trailFactor,
-              " Updated SL after trailing:",
-              SL
-            );
-          }
-        } else if (orderStatus === "Sold") {
-          if (LTP <= price - +trailSLXPoint * trailFactor) {
-            SL = originalSL - +trailSLYPoint * trailFactor;
-            SL.toFixed(2);
-            trailFactor = Math.floor((price - LTP) / +trailSLXPoint) + 1;
-            console.log(
-              "Next Trail factor:",
-              trailFactor,
-              "Updated SL after trailing:",
-              SL
-            );
+        if (trailSLXPoint !== 0 && trailSLYPoint !== 0) {
+          if (orderStatus === "Bought") {
+            if (LTP >= price + +trailSLXPoint * trailFactor) {
+              SL = originalSL + +trailSLYPoint * trailFactor;
+              trailFactor = Math.floor((LTP - price) / +trailSLXPoint) + 1;
+              console.log(
+                "Current Trail factor:",
+                trailFactor - 1,
+                " Updated SL after trailing:",
+                SL
+              );
+            }
+          } else if (orderStatus === "Sold") {
+            if (LTP <= price - +trailSLXPoint * trailFactor) {
+              SL = originalSL - +trailSLYPoint * trailFactor;
+              trailFactor = Math.floor((price - LTP) / +trailSLXPoint) + 1;
+              console.log(
+                "Current Trail factor:",
+                trailFactor - 1,
+                "Updated SL after trailing:",
+                SL
+              );
+            }
           }
         }
 
@@ -829,7 +839,9 @@ const makeOrder = async (
     0
   );
 
-  if (order) {
+  // console.log(order);
+
+  if (order.status !== "error") {
     orderHistory = await getOrder(
       account,
       account.userID,
@@ -863,4 +875,4 @@ const makeOrder = async (
   return newOrder;
 };
 
-// main();
+module.exports["strategyCustom"] = strategyCustom;

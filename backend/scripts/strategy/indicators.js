@@ -2,8 +2,8 @@ const SMA = require("technicalindicators").SMA;
 const VWAP = require("technicalindicators").VWAP;
 const RSI = require("technicalindicators").RSI;
 const MACD = require("technicalindicators").MACD;
-const zerodhaTrade = require("./broker/zerodha/trade");
-const utils = require("./utils");
+const zerodhaTrade = require("../../broker/zerodha/trade");
+const utils = require("../../utils");
 const logger = require("pino")();
 
 const Stock = require("stock-technical-indicators");

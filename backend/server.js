@@ -5,7 +5,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 require("dotenv").config();
 const mongoose = require("mongoose");
-require("./scripts/strategyCode")
+require("./scripts/strategy/strategy")
 //bring routes
 const authRoutes = require("./routes/authRoutes");
 
