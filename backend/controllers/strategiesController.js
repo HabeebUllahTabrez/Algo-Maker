@@ -40,6 +40,7 @@ exports.createStrategy = async (req, res) => {
     trailSLYPoint: req.body.trailSLYPoint, //
     indicators: req.body.indicators,
     maxOrders: req.body.maxOrders,
+    ce_pe: req.body.ce_pe,
   });
 
   strategy
