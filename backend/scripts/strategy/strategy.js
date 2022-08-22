@@ -27,7 +27,6 @@ async function main() {
           strategyCustom(strategy);
         });
       });
-
       Promise.all(newPromise);
     } else {
       console.log("No strategies for execution!");

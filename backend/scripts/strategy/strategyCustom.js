@@ -10,7 +10,7 @@ const { evaluateIndicatorValue } = require("./evaluateIndicators");
 async function strategyCustom(strategy) {
   return new Promise(async (resolve, reject) => {
     try {
-      // console.log(strategy);
+    
 
       Utils.print("Strategy started: ", strategy.name);
 
@@ -96,6 +96,7 @@ async function strategyCustom(strategy) {
             let entryOrder, exitOrder;
 
             let indicatorResults;
+            console.log("Exchange 1" , exchange);
 
             try {
               indicatorResults = await getBuySellArray(
@@ -104,7 +105,7 @@ async function strategyCustom(strategy) {
                 timeFrame,
                 candleParam,
                 direction,
-                prevIndicatorResults
+                prevIndicatorResults,
               );
               console.log(indicatorResults);
             } catch (error) {
@@ -316,7 +317,8 @@ const getBuySellArray = async (
   timeFrame,
   candleParam,
   direction,
-  prevIndicatorResults
+  prevIndicatorResults,
+  exchange
 ) => {
   const indicatorResults = [];
 
@@ -330,6 +332,7 @@ const getBuySellArray = async (
     let param2 = indicator.param2;
     let buyValue = indicator.value1;
     let sellValue = indicator.value2;
+    
 
     let shouldBuy = false;
     let shouldSell = false;
@@ -350,7 +353,8 @@ const getBuySellArray = async (
       timeFrame,
       param1,
       param2,
-      candleParam
+      candleParam,
+      exchange
     );
 
     console.log("Indicator Result: ", result);

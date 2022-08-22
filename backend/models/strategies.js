@@ -94,7 +94,7 @@ const strategySchema = new mongoose.Schema({
   },
   ce_pe: {
     type: String,
-    enum: ["CE", "PE"],
+    enum: ["ce", "pe"],
   },
 });
 

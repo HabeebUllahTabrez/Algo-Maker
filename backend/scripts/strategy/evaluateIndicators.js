@@ -2,7 +2,7 @@ const Indicators = require("./indicators");
 
 const evaluateIndicatorValue = async (
   indicator,
-  instrument,
+  dataSymbol,
   timeFrame,
   period,
   multiplier,
@@ -10,16 +10,17 @@ const evaluateIndicatorValue = async (
 ) => {
   console.log(
     indicator,
-    instrument,
+    dataSymbol,
     timeFrame,
     period,
     multiplier,
     candleParam
   );
+
   if (indicator === "sma") {
     try {
       indicatorData = await Indicators.sma({
-        instrument: instrument,
+        model,
         timeFrame,
         period: period,
         candleParam: candleParam,
@@ -31,7 +32,7 @@ const evaluateIndicatorValue = async (
     }
   } else if (indicator === "candle") {
     try {
-      let x = await Utils.getTodaysCandle(instrument, timeFrame);
+      let x = await Utils.getTodaysCandle(dataSymbol, timeFrame);
       // Utils.print("x: ", x)
       indicatorData = x[x.length - 1][candleParam];
       return indicatorData;
@@ -41,7 +42,7 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "vwap") {
     try {
       indicatorData = await Indicators.vwap({
-        instrument: instrument,
+        model,
         timeFrame,
         period: period,
         candleParam: candleParam,
@@ -54,7 +55,7 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "supertrend") {
     try {
       indicatorData = await Indicators.superTrend({
-        instrument: instrument,
+        model,
         timeFrame,
         period: period,
         multiplier,
@@ -68,7 +69,7 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "chandeMomentum") {
     try {
       indicatorData = await Indicators.cmo({
-        instrument: instrument,
+        model,
         timeFrame,
         period: period,
         candleParam: candleParam,
@@ -81,7 +82,7 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "centerOfGravity") {
     try {
       indicatorData = await Indicators.cog({
-        instrument: instrument,
+        model,
         timeFrame,
         period: period,
         candleParam: candleParam,
@@ -94,7 +95,7 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "fisherTransform") {
     try {
       indicatorData = await Indicators.ft({
-        instrument: instrument,
+        model,
         timeFrame,
         period: period,
         candleParam: candleParam,
@@ -107,7 +108,7 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "rsi") {
     try {
       indicatorData = await Indicators.rsi({
-        instrument: instrument,
+        model,
         timeFrame,
         period: period,
         candleParam: candleParam,
@@ -120,7 +121,7 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "macd") {
     try {
       indicatorData = await Indicators.macd({
-        instrument: instrument,
+        model,
         timeFrame,
         period: period,
         candleParam: candleParam,
@@ -133,7 +134,7 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "ema") {
     try {
       indicatorData = await Indicators.ema({
-        instrument: instrument,
+        model,
         timeFrame,
         period: period,
         candleParam: candleParam,
@@ -148,7 +149,7 @@ const evaluateIndicatorValue = async (
   // if (indicator2 == "sma") {
   //     try {
   //         indicator2Data = await Indicators.sma({
-  //             instrument: instrument2,
+  //             dataSymbol: dataSymbol2,
   //             apiKey: apiKey,
   //             accessToken: accessToken,
   //             timeFrame,
