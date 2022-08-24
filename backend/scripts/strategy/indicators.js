@@ -18,16 +18,27 @@ function normalize(val, max, min) {
   return (val - min) / (max - min);
 }
 
-async function sma({ instrument, timeFrame, period, candleParam }) {
+function getTimeFrameStringToNum(timeFrame) {
+  let interval;
+  let x = 5;
+  if (timeFrame === "30" || timeFrame === "60") x = 10;
+  if (timeFrame == "1") interval = "1min";
+  else interval = timeFrame + "min";
+  return {
+    interval,
+    x
+  }
+}
+
+async function sma({ dataSymbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
-      let x = 5;
-      let interval, data, candleIndex;
-      // console.log(instrument, timeFrame, period, candleParam)
 
-      if (timeFrame === "30" || timeFrame === "60") x = 10;
-      if (timeFrame == "1") interval = "1min";
-      else interval = timeFrame + "min";
+      let data, candleIndex;
+      const {x , interval} = getTimeFrameStringToNum(timeFrame);
+      // console.log("In sma: ", dataSymbolModel, timeFrame, period, candleParam)
+      // console.log("In sma: ", x, interval)
+
       let end = new Date();
 
       if (candleParam === "open") {
@@ -44,7 +55,7 @@ async function sma({ instrument, timeFrame, period, candleParam }) {
       // console.log(start)
       // console.log(end)
       try {
-        data = await utils.getCandlesData(instrument, interval, start, end);
+        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -63,20 +74,18 @@ async function sma({ instrument, timeFrame, period, candleParam }) {
   });
 }
 
-async function vwap({ instrument, timeFrame, period, candleParam }) {
+async function vwap({  dataSymbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
-      let x = 5;
-      let interval, data, candleIndex;
+      
+      let data, candleIndex;
 
-      if (timeFrame === "30" || timeFrame === "60") x = 10;
-      if (timeFrame == "1") interval = "1min";
-      else interval = timeFrame + "min";
+      const {x , interval} = getTimeFrameStringToNum(timeFrame);
       let end = new Date();
 
       let start = new Date(end.getTime() - x * 24 * 60 * 60 * 1000);
       try {
-        data = await utils.getCandlesData(instrument, interval, start, end);
+        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -103,7 +112,7 @@ async function vwap({ instrument, timeFrame, period, candleParam }) {
 }
 
 async function superTrend({
-  instrument,
+  dataSymbolModel,
   timeFrame,
   period,
   multiplier,
@@ -111,17 +120,14 @@ async function superTrend({
 }) {
   return new Promise(async (resolve, reject) => {
     try {
-      let x = 5;
-      let interval, data, candleIndex;
-
-      if (timeFrame === "30" || timeFrame === "60") x = 10;
-      if (timeFrame == "1") interval = "1min";
-      else interval = timeFrame + "min";
+     
+      let data, candleIndex;
+      const {x , interval} = getTimeFrameStringToNum(timeFrame);
       let end = new Date();
 
       let start = new Date(end.getTime() - x * 24 * 60 * 60 * 1000);
       try {
-        data = await utils.getCandlesData(instrument, interval, start, end);
+        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -141,7 +147,7 @@ async function superTrend({
 
         let finalData = {
           time: latestCandle[0],
-          instrument: instrument,
+          model: dataSymbolModel,
           open: latestCandle[1],
           high: latestCandle[2],
           low: latestCandle[3],
@@ -165,17 +171,14 @@ async function superTrend({
   });
 }
 
-async function chandeMomentum({ instrument, timeFrame, period, candleParam }) {
+async function chandeMomentum({ dataSymbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
       console.log("In chande momentum!");
-      let x = 5;
-      let interval, data, candleIndex;
-      // console.log(instrument, timeFrame, period, candleParam)
-
-      if (timeFrame === "30" || timeFrame === "60") x = 10;
-      if (timeFrame == "1") interval = "1min";
-      else interval = timeFrame + "min";
+     
+      let data, candleIndex;
+      // console.log(model, timeFrame, period, candleParam)
+      const {x , interval} = getTimeFrameStringToNum(timeFrame);
       let end = new Date();
 
       if (candleParam === "open") {
@@ -192,7 +195,7 @@ async function chandeMomentum({ instrument, timeFrame, period, candleParam }) {
       // console.log(start)
       // console.log(end)
       try {
-        data = await utils.getCandlesData(instrument, interval, start, end);
+        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -217,16 +220,14 @@ async function chandeMomentum({ instrument, timeFrame, period, candleParam }) {
   });
 }
 
-async function centerOfGravity({ instrument, timeFrame, period, candleParam }) {
+async function centerOfGravity({ dataSymbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
-      let x = 5;
-      let interval, data, candleIndex;
+     
+      let  data, candleIndex;
       console.log("In center of gravity");
 
-      if (timeFrame === "30" || timeFrame === "60") x = 10;
-      if (timeFrame == "1") interval = "1min";
-      else interval = timeFrame + "min";
+      const {x , interval} = getTimeFrameStringToNum(timeFrame);
       let end = new Date();
 
       if (candleParam === "open") {
@@ -243,7 +244,7 @@ async function centerOfGravity({ instrument, timeFrame, period, candleParam }) {
       console.log(start);
       console.log(end);
       try {
-        data = await utils.getCandlesData(instrument, interval, start, end);
+        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -267,16 +268,14 @@ async function centerOfGravity({ instrument, timeFrame, period, candleParam }) {
   });
 }
 
-async function fisherTransform({ instrument, timeFrame, period, candleParam }) {
+async function fisherTransform({ dataSymbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
-      let x = 5;
-      let interval, data, candleIndex;
-      // console.log(instrument, timeFrame, period, candleParam)
+     
+      let  data, candleIndex;
+      // console.log(model, timeFrame, period, candleParam)
 
-      if (timeFrame === "30" || timeFrame === "60") x = 10;
-      if (timeFrame == "1") interval = "1min";
-      else interval = timeFrame + "min";
+      const {x , interval} = getTimeFrameStringToNum(timeFrame);
       let end = new Date();
 
       if (candleParam === "open") {
@@ -293,7 +292,7 @@ async function fisherTransform({ instrument, timeFrame, period, candleParam }) {
       console.log(start);
       console.log(end);
       try {
-        data = await utils.getCandlesData(instrument, interval, start, end);
+        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -327,16 +326,14 @@ async function fisherTransform({ instrument, timeFrame, period, candleParam }) {
   });
 }
 
-async function rsi({ instrument, timeFrame, period, candleParam }) {
+async function rsi({ dataSymbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
-      let x = 5;
-      let interval, data, candleIndex;
-      // console.log(instrument, timeFrame, period, candleParam)
 
-      if (timeFrame === "30" || timeFrame === "60") x = 10;
-      if (timeFrame == "1") interval = "1min";
-      else interval = timeFrame + "min";
+      let data, candleIndex;
+      // console.log(model, timeFrame, period, candleParam)
+
+      const {x , interval} = getTimeFrameStringToNum(timeFrame);
       let end = new Date();
 
       if (candleParam === "open") {
@@ -353,7 +350,7 @@ async function rsi({ instrument, timeFrame, period, candleParam }) {
       console.log(start);
       console.log(end);
       try {
-        data = await utils.getCandlesData(instrument, interval, start, end);
+        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -372,16 +369,14 @@ async function rsi({ instrument, timeFrame, period, candleParam }) {
   });
 }
 
-async function macd({ instrument, timeFrame, period, candleParam }) {
+async function macd({ dataSymbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
-      let x = 5;
-      let interval, data, candleIndex;
-      // console.log(instrument, timeFrame, period, candleParam)
+     
+      let data, candleIndex;
+      // console.log(model, timeFrame, period, candleParam)
 
-      if (timeFrame === "30" || timeFrame === "60") x = 10;
-      if (timeFrame == "1") interval = "1min";
-      else interval = timeFrame + "min";
+      const {x , interval} = getTimeFrameStringToNum(timeFrame);
       let end = new Date();
 
       if (candleParam === "open") {
@@ -398,7 +393,7 @@ async function macd({ instrument, timeFrame, period, candleParam }) {
       console.log(start);
       console.log(end);
       try {
-        data = await utils.getCandlesData(instrument, interval, start, end);
+        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -422,17 +417,13 @@ async function macd({ instrument, timeFrame, period, candleParam }) {
   });
 }
 
-async function ema({ instrument, timeFrame, period, candleParam }) {
+async function ema({ dataSymbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
       console.log("In EMA");
-      let x = 5;
-      let interval, data, candleIndex;
-      // console.log(instrument, timeFrame, period, candleParam)
-
-      if (timeFrame === "30" || timeFrame === "60") x = 10;
-      if (timeFrame == "1") interval = "1min";
-      else interval = timeFrame + "min";
+      let data, candleIndex;
+      // console.log(model, timeFrame, period, candleParam)
+      const {x , interval} = getTimeFrameStringToNum(timeFrame);
       let end = new Date();
 
       if (candleParam === "open") {
@@ -449,7 +440,7 @@ async function ema({ instrument, timeFrame, period, candleParam }) {
       // console.log(start)
       // console.log(end)
       try {
-        data = await utils.getCandlesData(instrument, interval, start, end);
+        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);

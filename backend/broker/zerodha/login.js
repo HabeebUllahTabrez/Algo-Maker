@@ -10,8 +10,8 @@ const axios = require('axios')
 function getZerodhaEncToken({ userID, password, apiKey, pin, secret, auth_type, totp_secret }) {
     if (userID == undefined) return Promise.reject(" undefined userID  ");
     if (password == undefined) return Promise.reject(" undefined password  ");
-    if (apiKey == undefined) return Promise.reject(" undefined apiKey  ");
-    if (secret == undefined) return Promise.reject(" undefined secret  ");
+    // if (apiKey == undefined) return Promise.reject(" undefined apiKey  ");
+    // if (secret == undefined) return Promise.reject(" undefined secret  ");
     if (auth_type == undefined) { auth_type = "pin"; }
     if (auth_type == "pin" && pin == undefined) return Promise.reject(" undefined pin ");
     if (auth_type == "totp" && totp_secret == undefined) return Promise.reject(" undefined totp_secret ");
@@ -64,8 +64,8 @@ function getZerodhaAccessToken({ userID, password, pin, apiKey, secret, auth_typ
 
     if (userID == undefined) return Promise.reject(" undefined userID  ");
     if (password == undefined) return Promise.reject(" undefined password  ");
-    if (apiKey == undefined) return Promise.reject(" undefined apiKey  ");
-    if (secret == undefined) return Promise.reject(" undefined secret  ");
+    // if (apiKey == undefined) return Promise.reject(" undefined apiKey  ");
+    // if (secret == undefined) return Promise.reject(" undefined secret  ");
     if (auth_type == undefined) { auth_type = "pin"; }
     if (auth_type == "pin" && pin == undefined) return Promise.reject(" undefined pin ");
     if (auth_type == "totp" && totp_secret == undefined) return Promise.reject(" undefined totp_secret ");

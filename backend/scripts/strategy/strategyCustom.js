@@ -4,6 +4,7 @@ const cron = require("node-cron");
 const Order = require("../../models/orders");
 const Account = require("../../models/accounts");
 const futureTables = require("../../models/futureTables");
+const optionExpiryTable = require("../../models/optionExpiryTable");
 const { placeTrade, getOrder } = require("../../broker/zerodha/placeTrade");
 const { evaluateIndicatorValue } = require("./evaluateIndicators");
 
@@ -23,13 +24,12 @@ async function strategyCustom(strategy) {
       const exitHour = exitTime.getHours();
       const exitMinute = exitTime.getMinutes();
 
-      // let instrument = "NSE:" + strategy.instrument1;
-
       const candleParam = "close";
       let indicators = strategy.indicators;
       let exchange = strategy.exchange;
       let dataSymbol = strategy.dataSymbol;
       let orderSymbol = strategy.orderSymbol;
+      let ce_pe = strategy.ce_pe.toUpperCase();
       let timeFrame = strategy.timeFrame;
       let direction = strategy.direction;
       let orderType = strategy.orderType;
@@ -49,6 +49,9 @@ async function strategyCustom(strategy) {
       let trailSLXPoint = strategy.trailSLXPoint;
 
       let transformedOrderSymbol;
+      let transformedDataSymbol;
+      let dataSymmbolModel;
+      let timeFrameString = timeFrame + "min";
 
       let prevIndicatorResults = [];
 
@@ -66,41 +69,112 @@ async function strategyCustom(strategy) {
       // console.log(account);
       await Utils.waitForTime(entryHour, entryMinute, 0);
 
-      if (orderSymbol.includes("BANKNIFTY")) {
-        transformedOrderSymbol = "BANKNIFTY";
-      } else {
-        transformedOrderSymbol = "NIFTY";
-      }
-
-      // access todays date
-      const todaysDate = new Date();
-      // set todays date to 12:00 midnight
-      todaysDate.setHours(0, 0, 0, 0);
-
-      await futureTables
-        .find({ date: { $gt: todaysDate } })
-        .sort("date")
-        .then((dates) => {
-          let fut_name = dates[0].name.toUpperCase();
-
-          transformedOrderSymbol = "NFO:" + transformedOrderSymbol + fut_name;
-        });
-
-      transformedOrderSymbol = "NSE:RBLBANK";
-      console.log("Symbol to be ordered: ", transformedOrderSymbol);
-
       const strategyTask = cron.schedule(
         `2 */${timeFrame} * * * *`,
         async () => {
           if (!ordered) {
             let entryOrder, exitOrder;
-
             let indicatorResults;
+
+            // access todays date
+            const todaysDate = new Date();
+            // set todays date to 12:00 midnight
+            todaysDate.setHours(0, 0, 0, 0);
+
+            //------------------------------------------------------------------------
+            if (exchange === "fut_fut") {
+              let ex = "fu";
+
+              if (dataSymbol.includes("BANKNIFTY")) {
+                transformedOrderSymbol = "BANKNIFTY";
+                transformedDataSymbol = "BANKNIFTY";
+              } else {
+                transformedOrderSymbol = "NIFTY";
+                transformedDataSymbol = "NIFTY";
+              }
+
+              await futureTables
+                .find({ date: { $gt: todaysDate } })
+                .sort("date")
+                .then((dates) => {
+                  let fut_name = dates[0].name.toUpperCase();
+
+                  transformedDataSymbol = transformedDataSymbol + fut_name;
+                  transformedOrderSymbol =
+                    "NFO:" + transformedOrderSymbol + fut_name;
+                });
+
+              dataSymmbolModel = `${ex}_${transformedDataSymbol.toLowerCase()}_${timeFrameString}`;
+            } else if (exchange === "fut_opt") {
+              let ex = "op";
+              let optFactor;
+              let LTPOrderSymbol;
+
+              let optEvaluationArray = orderSymbol.split("_");
+              let optAddSubNumber =
+                +optEvaluationArray[optEvaluationArray.length - 1];
+              let optSymbol = optEvaluationArray[optEvaluationArray.length - 2];
+
+              if (dataSymbol.includes("BANKNIFTY")) {
+                transformedOrderSymbol = "BANKNIFTY";
+                transformedDataSymbol = "BANKNIFTY";
+                LTPOrderSymbol = "BANKNIFTY";
+                optFactor = 100;
+              } else {
+                transformedOrderSymbol = "NIFTY";
+                transformedDataSymbol = "NIFTY";
+                LTPOrderSymbol = "NIFTY";
+                optFactor = 50;
+              }
+
+              // Creating Futures order Model
+              await futureTables
+                .find({ date: { $gt: todaysDate } })
+                .sort("date")
+                .then((dates) => {
+                  let fut_name = dates[0].name.toUpperCase();
+
+                  LTPOrderSymbol = "NFO:" + LTPOrderSymbol + fut_name;
+                });
+
+              // Generating the opt number
+              let optNumber = await Utils.getLTP(LTPOrderSymbol);
+              console.log("LTP: ", optNumber);
+              optNumber = Math.round(optNumber / optFactor) * optFactor;
+
+              if (optSymbol === "+") {
+                optNumber += optAddSubNumber;
+              } else if (optSymbol === "-") {
+                optNumber -= optAddSubNumber;
+              }
+
+              await optionExpiryTable
+                .find({ date: { $gt: todaysDate } })
+                .sort("date")
+                .then((dates) => {
+                  let opt_name = dates[0].name.toUpperCase();
+
+                  transformedDataSymbol =
+                    transformedDataSymbol + opt_name + optNumber + ce_pe;
+                  transformedOrderSymbol =
+                    "NFO:" +
+                    transformedOrderSymbol +
+                    opt_name +
+                    optNumber +
+                    ce_pe;
+                });
+              dataSymmbolModel = `${ex}_${transformedDataSymbol.toLowerCase()}_${timeFrameString}`;
+            }
+            //------------------------------------------------------------------------
+
+            // transformedOrderSymbol = "NSE:RBLBANK"; // for testing only
+            console.log("Symbol to be ordered: ", transformedOrderSymbol);
+            console.log("DAta symbol Model: ", dataSymmbolModel);
 
             try {
               indicatorResults = await getBuySellArray(
                 indicators,
-                dataSymbol,
+                dataSymmbolModel,
                 timeFrame,
                 candleParam,
                 direction,
@@ -239,7 +313,7 @@ async function strategyCustom(strategy) {
                   trailSLYPoint,
                   exitHour,
                   exitMinute,
-                  dataSymbol,
+                  dataSymmbolModel,
                   candleParam,
                   timeFrame,
                   orderStatus,
@@ -269,7 +343,6 @@ async function strategyCustom(strategy) {
           strategyTask.stop();
           clearInterval(timeInterval);
         } else if (
-          currentTime.getHours() >= exitHour ||
           (currentTime.getHours() >= exitHour &&
             currentTime.getMinutes() >= exitMinute)
         ) {
@@ -287,9 +360,8 @@ async function strategyCustom(strategy) {
       }, timeFrame * 10 * 1000);
 
       let currentTime = new Date();
-      
+
       if (
-        currentTime.getHours() >= exitHour ||
         (currentTime.getHours() >= exitHour &&
           currentTime.getMinutes() >= exitMinute)
       ) {
@@ -312,7 +384,7 @@ async function strategyCustom(strategy) {
 
 const getBuySellArray = async (
   indicators,
-  dataSymbol,
+  dataSymmbolModel,
   timeFrame,
   candleParam,
   direction,
@@ -341,12 +413,13 @@ const getBuySellArray = async (
     //   param1,
     //   param2,
     //   buyValue,
-    //   sellValue
+    //   sellValue,
+    //   dataSymmbolModel
     // );
 
     let result = await evaluateIndicatorValue(
       indicatorName,
-      dataSymbol,
+      dataSymmbolModel,
       timeFrame,
       param1,
       param2,
@@ -479,7 +552,7 @@ async function checkForSLandTarget(
   trailSLYPoint,
   exitHour,
   exitMinute,
-  dataSymbol,
+  dataSymmbolModel,
   candleParam,
   timeFrame,
   orderStatus,
@@ -671,7 +744,7 @@ async function checkForSLandTarget(
             try {
               indicatorResults = await getBuySellArray(
                 indicators,
-                dataSymbol,
+                dataSymmbolModel,
                 timeFrame,
                 candleParam,
                 direction,
@@ -758,7 +831,7 @@ async function checkForSLandTarget(
             try {
               indicatorResults = await getBuySellArray(
                 indicators,
-                dataSymbol,
+                dataSymmbolModel,
                 timeFrame,
                 candleParam,
                 direction,
