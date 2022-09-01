@@ -2,7 +2,7 @@ const Indicators = require("./indicators");
 
 const evaluateIndicatorValue = async (
   indicator,
-  dataSymbolModel,
+  dataSymmbolModel,
   timeFrame,
   period,
   multiplier,
@@ -10,7 +10,7 @@ const evaluateIndicatorValue = async (
 ) => {
   console.log(
     indicator,
-    dataSymbolModel,
+    dataSymmbolModel,
     timeFrame,
     period,
     multiplier,
@@ -20,19 +20,18 @@ const evaluateIndicatorValue = async (
   if (indicator === "sma") {
     try {
       indicatorData = await Indicators.sma({
-        dataSymbolModel,
+        dataSymmbolModel,
         timeFrame,
         period: period,
         candleParam: candleParam,
       });
       return indicatorData;
     } catch (error) {
-      console.log("Errorrr");
       console.log(error);
     }
   } else if (indicator === "candle") {
     try {
-      let x = await Utils.getTodaysCandle(dataSymbolModel, timeFrame);
+      let x = await Utils.getTodaysCandle(dataSymmbolModel, timeFrame);
       // Utils.print("x: ", x)
       indicatorData = x[x.length - 1][candleParam];
       return indicatorData;
@@ -42,7 +41,7 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "vwap") {
     try {
       indicatorData = await Indicators.vwap({
-        dataSymbolModel,
+        dataSymmbolModel,
         timeFrame,
         period: period,
         candleParam: candleParam,
@@ -55,7 +54,7 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "supertrend") {
     try {
       indicatorData = await Indicators.superTrend({
-        dataSymbolModel,
+        dataSymmbolModel,
         timeFrame,
         period: period,
         multiplier,
@@ -69,7 +68,7 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "chandeMomentum") {
     try {
       indicatorData = await Indicators.cmo({
-        dataSymbolModel,
+        dataSymmbolModel,
         timeFrame,
         period: period,
         candleParam: candleParam,
@@ -82,7 +81,7 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "centerOfGravity") {
     try {
       indicatorData = await Indicators.cog({
-        dataSymbolModel,
+        dataSymmbolModel,
         timeFrame,
         period: period,
         candleParam: candleParam,
@@ -95,7 +94,7 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "fisherTransform") {
     try {
       indicatorData = await Indicators.ft({
-        dataSymbolModel,
+        dataSymmbolModel,
         timeFrame,
         period: period,
         candleParam: candleParam,
@@ -108,7 +107,7 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "rsi") {
     try {
       indicatorData = await Indicators.rsi({
-        dataSymbolModel,
+        dataSymmbolModel,
         timeFrame,
         period: period,
         candleParam: candleParam,
@@ -121,12 +120,12 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "macd") {
     try {
       indicatorData = await Indicators.macd({
-        dataSymbolModel,
+        dataSymmbolModel,
         timeFrame,
         period: period,
         candleParam: candleParam,
       });
-      return indicatorData;
+      return indicatorData.macd;
     } catch (error) {
       console.log("Errorrr");
       console.log(error);
@@ -134,7 +133,7 @@ const evaluateIndicatorValue = async (
   } else if (indicator === "ema") {
     try {
       indicatorData = await Indicators.ema({
-        dataSymbolModel,
+        dataSymmbolModel,
         timeFrame,
         period: period,
         candleParam: candleParam,
@@ -145,6 +144,121 @@ const evaluateIndicatorValue = async (
       console.log(error);
     }
   }
+  else if(indicator == "atr") {
+    try {
+      indicatorData = await Indicators.atr({
+        dataSymmbolModel,
+        timeFrame,
+        period: period,
+        candleParam: candleParam,
+      });
+      return indicatorData;
+    } catch (error) {
+      console.log("Errorrr");
+      console.log(error);
+    }
+  }
+  else if(indicator == "adx") {
+    try {
+      indicatorData = await Indicators.adx({
+        dataSymmbolModel,
+        timeFrame,
+        period: period,
+        candleParam: candleParam,
+      });
+      
+      return indicatorData ? indicatorData.adx : indicatorData;
+    } catch (error) {
+      console.log("Errorrr");
+      console.log(error);
+    }
+  }
+  
+  else if(indicator == "cci") {
+    try {
+      indicatorData = await Indicators.cci({
+        dataSymmbolModel,
+        timeFrame,
+        period: period,
+        candleParam: candleParam,
+      });
+      return indicatorData;
+    } catch (error) {
+      console.log("Errorrr");
+      console.log(error);
+    }
+  }
+  else if(indicator == "psar") {
+    try {
+      indicatorData = await Indicators.psar({
+        dataSymmbolModel,
+        timeFrame,
+        period: period,
+        candleParam: candleParam,
+      });
+      return indicatorData;
+    } catch (error) {
+      console.log("Errorrr");
+      console.log(error);
+    }
+  }
+  else if(indicator == "Roc") {
+    try {
+      indicatorData = await Indicators.Roc({
+        dataSymmbolModel,
+        timeFrame,
+        period: period,
+        candleParam: candleParam,
+      });
+      return indicatorData;
+    } catch (error) {
+      console.log("Errorrr");
+      console.log(error);
+    }
+  }
+  else if(indicator == "stochastic") {
+    try {
+      indicatorData = await Indicators.stochastic({
+        dataSymmbolModel,
+        timeFrame,
+        period: period,
+        candleParam: candleParam,
+      });
+      return indicatorData.k;
+    } catch (error) {
+      console.log("Errorrr");
+      console.log(error);
+    }
+  }
+   else if(indicator == "wma") {
+    try {
+      indicatorData = await Indicators.wma({
+        dataSymmbolModel,
+        timeFrame,
+        period: period,
+        candleParam: candleParam,
+      });
+      return indicatorData;
+    } catch (error) {
+      console.log("Errorrr");
+      console.log(error);
+    }
+  }
+  else if(indicator == "williamsR") {
+    try {
+      indicatorData = await Indicators.williamsR({
+        dataSymmbolModel,
+        timeFrame,
+        period: period,
+        candleParam: candleParam,
+      });
+      return indicatorData;
+    } catch (error) {
+      console.log("Errorrr");
+      console.log(error);
+    }
+  }
+  
 
   // if (indicator2 == "sma") {
   //     try {

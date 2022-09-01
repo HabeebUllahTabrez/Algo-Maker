@@ -12,7 +12,6 @@ async function strategyCustom(strategy) {
   return new Promise(async (resolve, reject) => {
     try {
       // console.log(strategy);
-
       Utils.print("Strategy started: ", strategy.name);
 
       let entryTime = new Date(strategy.entryTime);
@@ -133,27 +132,28 @@ async function strategyCustom(strategy) {
                 .sort("date")
                 .then((dates) => {
                   let fut_name = dates[0].name.toUpperCase();
-
                   LTPOrderSymbol = "NFO:" + LTPOrderSymbol + fut_name;
                 });
-
+                
+ 
               // Generating the opt number
               let optNumber = await Utils.getLTP(LTPOrderSymbol);
               console.log("LTP: ", optNumber);
               optNumber = Math.round(optNumber / optFactor) * optFactor;
-
+          
               if (optSymbol === "+") {
                 optNumber += optAddSubNumber;
               } else if (optSymbol === "-") {
                 optNumber -= optAddSubNumber;
               }
 
-              await optionExpiryTable
+               await optionExpiryTable
                 .find({ date: { $gt: todaysDate } })
                 .sort("date")
                 .then((dates) => {
+                
                   let opt_name = dates[0].name.toUpperCase();
-
+                  
                   transformedDataSymbol =
                     transformedDataSymbol + opt_name + optNumber + ce_pe;
                   transformedOrderSymbol =
@@ -163,6 +163,7 @@ async function strategyCustom(strategy) {
                     optNumber +
                     ce_pe;
                 });
+
               dataSymmbolModel = `${ex}_${transformedDataSymbol.toLowerCase()}_${timeFrameString}`;
             }
             //------------------------------------------------------------------------
@@ -188,7 +189,7 @@ async function strategyCustom(strategy) {
 
             shouldOrder =
               (indicatorResults.every((element) => element === "BUY") ||
-                indicatorResults.every((element) => element === "SELL")) &&
+              indicatorResults.every((element) => element === "SELL")) &&
               indicatorResults.length === indicators.length;
 
             shouldBuy = indicatorResults.every((element) => element === "BUY");
@@ -214,7 +215,6 @@ async function strategyCustom(strategy) {
                     "Indicator entry",
                     pairId
                   );
-
                   if (!entryOrder) {
                     isError = true;
                   } else {
@@ -245,6 +245,8 @@ async function strategyCustom(strategy) {
                       "Indicator entry",
                       pairId
                     );
+
+                   
                     if (!entryOrder) {
                       isError = true;
                     } else {
@@ -265,6 +267,7 @@ async function strategyCustom(strategy) {
                   console.log(message);
                   try {
                     entryOrder = await makeOrder(
+                      
                       account,
                       transformedOrderSymbol,
                       "SELL",
@@ -426,8 +429,8 @@ const getBuySellArray = async (
       candleParam
     );
 
-    console.log("Indicator Result: ", result);
-    console.log("Previous Indicator Result: ", prevIndicatorResults[i]);
+    console.log("Indicator result: ", result);
+    console.log("Previous Indicator result: ", prevIndicatorResults[i]);
     console.log("Buy Value: ", buyValue);
     console.log("Sell Value: ", sellValue);
 
@@ -488,8 +491,10 @@ const getBuySellArray = async (
       if (direction === "BUY") {
         // Buy direction
         if (operator1 === "greater") {
+         
           indicatorResults.push(result > buyValue ? "BUY" : "None");
         } else if (operator1 === "less") {
+         
           indicatorResults.push(result < buyValue ? "BUY" : "None");
         } else if (operator1 === "crossabove") {
           indicatorResults.push(
@@ -565,7 +570,6 @@ async function checkForSLandTarget(
       let trailFactor = 1;
       let originalSL;
       let prevIndicatorResults = [];
-
       let exitOrder;
 
       console.log("In SL");

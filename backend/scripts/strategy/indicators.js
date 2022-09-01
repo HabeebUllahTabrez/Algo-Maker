@@ -2,6 +2,16 @@ const SMA = require("technicalindicators").SMA;
 const VWAP = require("technicalindicators").VWAP;
 const RSI = require("technicalindicators").RSI;
 const MACD = require("technicalindicators").MACD;
+const ADX = require('technicalindicators').ADX;
+const ATR = require('technicalindicators').ATR;
+
+const CCI = require('technicalindicators').CCI;
+const PSAR = require('technicalindicators').PSAR;
+const ROC = require('technicalindicators').ROC;
+const WMA = require('technicalindicators').WMA;
+const Stochastic = require('technicalindicators').Stochastic;
+const WilliamsR = require('technicalindicators').WilliamsR;
+
 const zerodhaTrade = require("../../broker/zerodha/trade");
 const utils = require("../../utils");
 const logger = require("pino")();
@@ -30,17 +40,25 @@ function getTimeFrameStringToNum(timeFrame) {
   }
 }
 
-async function sma({ dataSymbolModel, timeFrame, period, candleParam }) {
+
+function getTimes(x) {
+  let end = new Date();
+  let start = new Date(end.getTime() - x * 24 * 60 * 60 * 1000);
+  return {end , start};
+}
+
+
+//  Simple Moving Average (SMA). 
+async function sma({ dataSymmbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
 
       let data, candleIndex;
       const {x , interval} = getTimeFrameStringToNum(timeFrame);
-      // console.log("In sma: ", dataSymbolModel, timeFrame, period, candleParam)
       // console.log("In sma: ", x, interval)
-
-      let end = new Date();
-
+      
+     const {end , start} = getTimes(x);
+       
       if (candleParam === "open") {
         candleIndex = 1;
       } else if (candleParam === "high") {
@@ -51,13 +69,11 @@ async function sma({ dataSymbolModel, timeFrame, period, candleParam }) {
         candleIndex = 4;
       }
 
-      let start = new Date(end.getTime() - x * 24 * 60 * 60 * 1000);
       // console.log(start)
       // console.log(end)
       try {
-        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
+        data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
       } catch (err) {
-        console.log(err);
         reject(err);
       }
 
@@ -74,18 +90,17 @@ async function sma({ dataSymbolModel, timeFrame, period, candleParam }) {
   });
 }
 
-async function vwap({  dataSymbolModel, timeFrame, period, candleParam }) {
+async function vwap({  dataSymmbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
       
       let data, candleIndex;
 
       const {x , interval} = getTimeFrameStringToNum(timeFrame);
-      let end = new Date();
+      const {end , start} = getTimes(x);
 
-      let start = new Date(end.getTime() - x * 24 * 60 * 60 * 1000);
       try {
-        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
+        data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -97,10 +112,10 @@ async function vwap({  dataSymbolModel, timeFrame, period, candleParam }) {
       let vwap = VWAP.calculate({
         period: period,
         // values: data.map(x => x[candleParam]),
-        high: data.map((x) => x[2]),
-        low: data.map((x) => x[3]),
-        close: data.map((x) => x[4]),
-        volume: data.map((x) => x[5]),
+        high: data.map((x) => x["high"]),
+        low: data.map((x) => x["low"]),
+        close: data.map((x) => x["close"]),
+        volume: data.map((x) => x["volume"]),
       });
 
       console.log(vwap);
@@ -112,7 +127,7 @@ async function vwap({  dataSymbolModel, timeFrame, period, candleParam }) {
 }
 
 async function superTrend({
-  dataSymbolModel,
+  dataSymmbolModel,
   timeFrame,
   period,
   multiplier,
@@ -123,11 +138,10 @@ async function superTrend({
      
       let data, candleIndex;
       const {x , interval} = getTimeFrameStringToNum(timeFrame);
-      let end = new Date();
+      const {end , start} = getTimes(x);
 
-      let start = new Date(end.getTime() - x * 24 * 60 * 60 * 1000);
       try {
-        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
+        data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -147,7 +161,7 @@ async function superTrend({
 
         let finalData = {
           time: latestCandle[0],
-          model: dataSymbolModel,
+          model: dataSymmbolModel,
           open: latestCandle[1],
           high: latestCandle[2],
           low: latestCandle[3],
@@ -171,7 +185,7 @@ async function superTrend({
   });
 }
 
-async function chandeMomentum({ dataSymbolModel, timeFrame, period, candleParam }) {
+async function chandeMomentum({ dataSymmbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
       console.log("In chande momentum!");
@@ -179,7 +193,7 @@ async function chandeMomentum({ dataSymbolModel, timeFrame, period, candleParam 
       let data, candleIndex;
       // console.log(model, timeFrame, period, candleParam)
       const {x , interval} = getTimeFrameStringToNum(timeFrame);
-      let end = new Date();
+      const {end , start} = getTimes(x);
 
       if (candleParam === "open") {
         candleIndex = 1;
@@ -191,11 +205,10 @@ async function chandeMomentum({ dataSymbolModel, timeFrame, period, candleParam 
         candleIndex = 4;
       }
 
-      let start = new Date(end.getTime() - x * 24 * 60 * 60 * 1000);
       // console.log(start)
       // console.log(end)
       try {
-        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
+        data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -220,7 +233,7 @@ async function chandeMomentum({ dataSymbolModel, timeFrame, period, candleParam 
   });
 }
 
-async function centerOfGravity({ dataSymbolModel, timeFrame, period, candleParam }) {
+async function centerOfGravity({ dataSymmbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
      
@@ -228,7 +241,7 @@ async function centerOfGravity({ dataSymbolModel, timeFrame, period, candleParam
       console.log("In center of gravity");
 
       const {x , interval} = getTimeFrameStringToNum(timeFrame);
-      let end = new Date();
+      const {end , start} = getTimes(x);
 
       if (candleParam === "open") {
         candleIndex = 1;
@@ -240,11 +253,10 @@ async function centerOfGravity({ dataSymbolModel, timeFrame, period, candleParam
         candleIndex = 4;
       }
 
-      let start = new Date(end.getTime() - x * 24 * 60 * 60 * 1000);
       console.log(start);
       console.log(end);
       try {
-        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
+        data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -268,7 +280,7 @@ async function centerOfGravity({ dataSymbolModel, timeFrame, period, candleParam
   });
 }
 
-async function fisherTransform({ dataSymbolModel, timeFrame, period, candleParam }) {
+async function fisherTransform({ dataSymmbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
      
@@ -276,7 +288,7 @@ async function fisherTransform({ dataSymbolModel, timeFrame, period, candleParam
       // console.log(model, timeFrame, period, candleParam)
 
       const {x , interval} = getTimeFrameStringToNum(timeFrame);
-      let end = new Date();
+      const {end , start} = getTimes(x);
 
       if (candleParam === "open") {
         candleIndex = 1;
@@ -288,11 +300,10 @@ async function fisherTransform({ dataSymbolModel, timeFrame, period, candleParam
         candleIndex = 4;
       }
 
-      let start = new Date(end.getTime() - x * 24 * 60 * 60 * 1000);
       console.log(start);
       console.log(end);
       try {
-        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
+        data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -326,7 +337,8 @@ async function fisherTransform({ dataSymbolModel, timeFrame, period, candleParam
   });
 }
 
-async function rsi({ dataSymbolModel, timeFrame, period, candleParam }) {
+// Relative Strength Index (RSI).
+async function rsi({ dataSymmbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
 
@@ -334,7 +346,7 @@ async function rsi({ dataSymbolModel, timeFrame, period, candleParam }) {
       // console.log(model, timeFrame, period, candleParam)
 
       const {x , interval} = getTimeFrameStringToNum(timeFrame);
-      let end = new Date();
+      const {end , start} = getTimes(x);
 
       if (candleParam === "open") {
         candleIndex = 1;
@@ -346,11 +358,10 @@ async function rsi({ dataSymbolModel, timeFrame, period, candleParam }) {
         candleIndex = 4;
       }
 
-      let start = new Date(end.getTime() - x * 24 * 60 * 60 * 1000);
       console.log(start);
       console.log(end);
       try {
-        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
+        data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -369,7 +380,8 @@ async function rsi({ dataSymbolModel, timeFrame, period, candleParam }) {
   });
 }
 
-async function macd({ dataSymbolModel, timeFrame, period, candleParam }) {
+// Moving Average Convergence Divergence (MACD).
+async function macd({ dataSymmbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
      
@@ -377,7 +389,7 @@ async function macd({ dataSymbolModel, timeFrame, period, candleParam }) {
       // console.log(model, timeFrame, period, candleParam)
 
       const {x , interval} = getTimeFrameStringToNum(timeFrame);
-      let end = new Date();
+      const {end , start} = getTimes(x);
 
       if (candleParam === "open") {
         candleIndex = 1;
@@ -389,11 +401,10 @@ async function macd({ dataSymbolModel, timeFrame, period, candleParam }) {
         candleIndex = 4;
       }
 
-      let start = new Date(end.getTime() - x * 24 * 60 * 60 * 1000);
       console.log(start);
       console.log(end);
       try {
-        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
+        data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -417,14 +428,15 @@ async function macd({ dataSymbolModel, timeFrame, period, candleParam }) {
   });
 }
 
-async function ema({ dataSymbolModel, timeFrame, period, candleParam }) {
+// Exponential Moving Average (EMA).
+async function ema({ dataSymmbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
       console.log("In EMA");
       let data, candleIndex;
       // console.log(model, timeFrame, period, candleParam)
       const {x , interval} = getTimeFrameStringToNum(timeFrame);
-      let end = new Date();
+      const {end , start} = getTimes(x);
 
       if (candleParam === "open") {
         candleIndex = 1;
@@ -436,11 +448,10 @@ async function ema({ dataSymbolModel, timeFrame, period, candleParam }) {
         candleIndex = 4;
       }
 
-      let start = new Date(end.getTime() - x * 24 * 60 * 60 * 1000);
       // console.log(start)
       // console.log(end)
       try {
-        data = await utils.getCandlesData(dataSymbolModel, interval, start, end);
+        data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
       } catch (err) {
         console.log(err);
         reject(err);
@@ -465,6 +476,261 @@ async function ema({ dataSymbolModel, timeFrame, period, candleParam }) {
   });
 }
 
+// Average True Range (ATR).
+async function atr({ dataSymmbolModel, timeFrame, period, candleParam }) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      
+      let data, candleIndex;
+      const {x , interval} = getTimeFrameStringToNum(timeFrame);
+      const {end , start} = getTimes(x);
+
+      try {
+        data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
+      } catch (err) {
+        console.log(err);
+        reject(err);
+      }
+
+      // This function requires volume
+
+      console.log("atr candle", data[0]);
+      let input = {
+        // values: data.map(x => x[candleParam]),
+        high: data.map((x) => x["high"]),
+        low: data.map((x) => x["low"]),
+        close: data.map((x) => x[candleParam]),
+        period: period,
+      }
+      let atr = ATR.calculate(input);
+
+      // console.log(atr);
+      resolve(atr[atr.length - 1]);
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+// Average Directional Index (ADX).
+async function adx({ dataSymmbolModel, timeFrame, period, candleParam }) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      
+      let data, candleIndex;
+      const {x , interval} = getTimeFrameStringToNum(timeFrame);
+      const {end , start} = getTimes(x);
+      console.log("Adx" , dataSymmbolModel , timeFrame , period , end , start);
+      try {
+        data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
+      } catch (err) {
+        console.log(err);
+        reject(err);
+      }
+      
+      console.log("candle", data[0]);
+  
+      let adx = ADX.calculate({
+        // values: data.map(x => x[candleParam]),
+        close: data.map((x) => x["close"]),
+        high: data.map((x) => x["high"]),
+        low: data.map((x) => x["low"]),
+        period: period,
+      });
+
+      // console.log(adx);
+      resolve(adx[adx.length - 1]);
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+
+async function cci({ dataSymmbolModel, timeFrame, period, candleParam }) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      
+      let data, candleIndex;
+      const {x , interval} = getTimeFrameStringToNum(timeFrame);
+      const {end , start} = getTimes(x);
+
+      try {
+        data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
+      } catch (err) {
+        console.log(err);
+        reject(err);
+      }
+
+  
+      console.log("candle", data[0]);
+      let adx = CCI.calculate({
+        // values: data.map(x => x[candleParam]),
+        open : data.map(x =>x["open"]),
+        high: data.map((x) => x["high"]),
+        low: data.map((x) => x["low"]),
+        close: data.map((x) => x[candleParam]),
+        period: period,
+      });
+
+      console.log(adx);
+      resolve(adx[adx.length - 1]);
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+// Parabolic Stop and Reverse (PSAR)
+async function psar({ dataSymmbolModel, timeFrame, period, candleParam }) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      
+      let data, candleIndex;
+
+      const {x , interval} = getTimeFrameStringToNum(timeFrame);
+      const {end , start} = getTimes(x);
+
+      try {
+        data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
+      } catch (err) {
+        console.log(err);
+        reject(err);
+      }
+
+      // This function requires volume
+      console.log("Parabolic Stop and Reverse candle", data[0]);
+      let psar = PSAR.calculate({
+        // values: data.map(x => x[candleParam]),
+        high: data.map((x) => x["high"]),
+        low: data.map((x) => x["low"]),
+        step : 0.02,
+        max : 0.2
+      });
+
+      console.log(psar);
+      resolve(psar[psar.length - 1]);
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+// Rate of Change*
+async function Roc({ dataSymmbolModel, timeFrame, period, candleParam }) {
+  return new Promise(async (resolve, reject) => {
+
+    let data, candleIndex;
+    const {x , interval} = getTimeFrameStringToNum(timeFrame);
+    const {end , start} = getTimes(x);
+
+    try {
+      data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
+      console.log("candle", data[0]);  // print data cmd
+
+      var input = {period : period , values : data.map((x) => x[candleParam])}
+      let roc = ROC.calculate(input);    
+
+      console.log(roc);
+      resolve(roc[roc.length - 1]);    
+    } catch (err) {
+      console.log(err);
+      reject(err);
+    }
+  });
+}
+
+
+// Stochastic Oscillator (KD).
+async function stochastic({ dataSymmbolModel, timeFrame, period, candleParam }) {
+  return new Promise(async (resolve, reject) => {
+
+    let data, candleIndex;
+    const {x , interval} = getTimeFrameStringToNum(timeFrame);
+    const {end , start} = getTimes(x);
+
+    try {
+      data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
+      console.log("candle", data[0]);  // print data cmd
+
+      let kd = Stochastic.calculate({
+        high: data.map((x) => x["high"]),
+        low: data.map((x) => x["low"]),
+        close: data.map((x) => x["close"]),
+        period : period,
+        signalPeriod : 3
+      });    
+
+      console.log(kd);
+      resolve(kd[kd.length - 1]);    
+    } catch (err) {
+      console.log(err);
+      reject(err);
+    }
+  });
+}
+
+
+// weigheted moving average
+async function wma({ dataSymmbolModel, timeFrame, period, candleParam }) {
+  return new Promise(async (resolve, reject) => {
+
+    let data, candleIndex;
+    const {x , interval} = getTimeFrameStringToNum(timeFrame);
+    const {end , start} = getTimes(x);
+
+    try {
+      data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
+      console.log("candle", data[0]);  // print data cmd
+
+      var input = {period : period , values : data.map((x) => x[candleParam])}
+      let wma = WMA.calculate(input);    
+
+      console.log(wma);
+      resolve(wma[wma.length - 1]);    
+    } catch (err) {
+      console.log(err);
+      reject(err);
+    }
+  });
+}
+
+// WilliamsR (WilliamsR)
+async function williamsR({ dataSymmbolModel, timeFrame, period, candleParam }) {
+  return new Promise(async (resolve, reject) => {
+    try {
+      
+      let data, candleIndex;
+      const {x , interval} = getTimeFrameStringToNum(timeFrame);
+      const {end , start} = getTimes(x);
+
+      try {
+        data = await utils.getCandlesData(dataSymmbolModel, interval, start, end);
+      } catch (err) {
+        console.log(err);
+        reject(err);
+      }
+
+      // This function requires volume
+      console.log("WilliamsR candle", data[0]);
+      let input = {
+        // values: data.map(x => x[candleParam]),
+        high: data.map((x) => x["high"]),
+        low: data.map((x) => x["low"]),
+        close: data.map((x) => x["close"]),
+        period: period,
+      }
+      let williamsR = WilliamsR.calculate(input);
+      
+      console.log(williamsR);
+      resolve(williamsR[williamsR.length - 1]);
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
+
+
 module.exports["superTrend"] = superTrend;
 module.exports["sma"] = sma;
 module.exports["vwap"] = vwap;
@@ -474,3 +740,11 @@ module.exports["ft"] = fisherTransform;
 module.exports["rsi"] = rsi;
 module.exports["macd"] = macd;
 module.exports["ema"] = ema;
+module.exports["atr"] = atr;
+module.exports["adx"] = adx;
+module.exports["cci"] = cci; 
+module.exports["psar"] = psar; 
+module.exports["Roc"] = Roc; 
+module.exports["wma"] = wma; 
+module.exports["stochastic"] = stochastic; 
+module.exports["williamsR"] = williamsR; 

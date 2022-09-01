@@ -58,13 +58,14 @@ function getParams() {
 
 
 async function waitForXseconds(x) {
-
+    
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             resolve("done");
         }, x * 1000);
     })
 };
+
 function waitForTime(entryHour, entryMinute, entrySecond) {
 
     return new Promise(async (resolve, reject) => {
@@ -140,10 +141,9 @@ function getCandlesData(dataSymbolModel, timeFrame, start, end) {
         // console.log(new Date(start))
         console.log("Table Name: ", dataSymbolModel);
         getModel(dataSymbolModel).find({
-            minute: {$gte: new Date(start) },
+            minute: {$gte: new Date(start)},
             // minute: { $lte: new Date(end) }
         }).then((data) => {
-            // console.log(data)
             resolve(data);
         }).catch((err) => {
             reject(err)

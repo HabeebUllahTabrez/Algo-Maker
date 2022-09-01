@@ -39,7 +39,7 @@ router.get("/getPositions/:id", requireSignin, authMiddleware, getPositions);
 
 module.exports = router;
 
-loginOrderAccount()
+// loginOrderAccount()
 
 // The time is in utc, 3:00AM in UTC is 8:30AM in IST
 cron.schedule(`0 0 3 * * 1-5`, async () => {
