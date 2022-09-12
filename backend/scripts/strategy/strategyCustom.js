@@ -211,9 +211,8 @@ async function strategyCustom(strategy) {
                 .sort("date")
                 .then((dates) => {
                   let opt_name = dates[0].name.toUpperCase();
-
-                  transformedDataSymbol =
-                    transformedDataSymbol + opt_name + optNumber + ce_pe;
+ 
+                  transformedDataSymbol = transformedDataSymbol + opt_name + optNumber + ce_pe;
                   transformedOrderSymbol =
                     "NFO:" +
                     transformedOrderSymbol +
@@ -244,7 +243,7 @@ async function strategyCustom(strategy) {
               console.log("Error occured in evaluating strategies!");
               console.log(error);
             }
-
+                
             shouldOrder =
               (indicatorResults.every((element) => element === "BUY") ||
                 indicatorResults.every((element) => element === "SELL")) &&
@@ -262,6 +261,7 @@ async function strategyCustom(strategy) {
                 let message = direction === "BUY" ? "Buying" : "Selling";
                 console.log(message);
                 pairId = uuidv4();
+                
                 try {
                   entryOrder = await makeOrder(
                     account,
@@ -271,8 +271,10 @@ async function strategyCustom(strategy) {
                     orderType,
                     exchange,
                     strategy.name,
-                    pairId
+                    pairId,
+                    ce_pe
                   );
+                
                   if (!entryOrder) {
                     isError = true;
                   } else {
@@ -300,7 +302,8 @@ async function strategyCustom(strategy) {
                       orderType,
                       exchange,
                       strategy.name,
-                      pairId
+                      pairId,
+                      ce_pe
                     );
 
                     if (!entryOrder) {
@@ -330,7 +333,8 @@ async function strategyCustom(strategy) {
                       orderType,
                       exchange,
                       strategy.name,
-                      pairId
+                      pairId,
+                      ce_pe
                     );
                     if (!entryOrder) {
                       isError = true;
@@ -376,7 +380,8 @@ async function strategyCustom(strategy) {
                   timeFrame,
                   orderStatus,
                   pairId,
-                  indicators
+                  indicators,
+                  ce_pe
                 );
 
                 ordered = false;
@@ -615,7 +620,8 @@ async function checkForSLandTarget(
   timeFrame,
   orderStatus,
   pairId,
-  indicators
+  indicators,
+  ce_pe
 ) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -738,7 +744,8 @@ async function checkForSLandTarget(
               orderType,
               exchange,
               "Exit Time Reached",
-              pairId
+              pairId,
+              ce_pe
             );
             // Utils.print("Exit Order: ", exitOrder);
           } else if (orderStatus === "Sold") {
@@ -751,7 +758,8 @@ async function checkForSLandTarget(
               orderType,
               exchange,
               "Exit Time Reached",
-              pairId
+              pairId,
+              ce_pe
             );
             // Utils.print("Exit Order: ", exitOrder);
           }
@@ -770,7 +778,8 @@ async function checkForSLandTarget(
                 orderType,
                 exchange,
                 "Stoploss Hit",
-                pairId
+                pairId,
+                ce_pe
               );
               // Utils.print("Exit Order: ", exitOrder);
               break;
@@ -789,7 +798,8 @@ async function checkForSLandTarget(
                 orderType,
                 exchange,
                 "Target Hit",
-                pairId
+                pairId,
+                ce_pe
               );
               // Utils.print("Exit Order: ", exitOrder);
               break;
@@ -834,7 +844,8 @@ async function checkForSLandTarget(
                   orderType,
                   exchange,
                   "Indicator Exit",
-                  pairId
+                  pairId,
+                  ce_pe
                 );
                 // Utils.print("Exit Order: ", exitOrder);
                 break;
@@ -857,7 +868,8 @@ async function checkForSLandTarget(
                 orderType,
                 exchange,
                 "Stoploss Hit",
-                pairId
+                pairId,
+                ce_pe
               );
               // Utils.print("Exit Order: ", exitOrder);
               break;
@@ -876,7 +888,8 @@ async function checkForSLandTarget(
                 orderType,
                 exchange,
                 "Target Hit",
-                pairId
+                pairId,
+                ce_pe
               );
               // Utils.print("Exit Order: ", exitOrder);
               break;
@@ -921,7 +934,8 @@ async function checkForSLandTarget(
                   orderType,
                   exchange,
                   "Indicator Exit",
-                  pairId
+                  pairId,
+                  ce_pe
                 );
                 // Utils.print("Exit Order: ", exitOrder);
                 break;
@@ -950,7 +964,8 @@ const makeOrder = async (
   orderType,
   exchange,
   remarks,
-  pairId
+  pairId,
+  ce_pe
 ) => {
   let orderHistory;
   let newOrder;
@@ -997,11 +1012,11 @@ const makeOrder = async (
       remarks: remarks,
       status: status,
       pairId: pairId,
+      ce_pe : ce_pe
     });
 
     newOrder = await orderDetails.save();
   }
-
   return newOrder;
 };
 

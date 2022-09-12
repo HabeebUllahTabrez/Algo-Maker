@@ -21,6 +21,7 @@ const strategySchema = new mongoose.Schema(
       enum: ["fut_fut", "fut_opt", "opt_opt"],
     },
     orderSymbol: String,
+    ce_pe : String,
     orderType: {
       type: String,
       required: true,
