@@ -4,14 +4,12 @@ const RSI = require("technicalindicators").RSI;
 const MACD = require("technicalindicators").MACD;
 const ADX = require('technicalindicators').ADX;
 const ATR = require('technicalindicators').ATR;
-
 const CCI = require('technicalindicators').CCI;
 const PSAR = require('technicalindicators').PSAR;
 const ROC = require('technicalindicators').ROC;
 const WMA = require('technicalindicators').WMA;
 const Stochastic = require('technicalindicators').Stochastic;
 const WilliamsR = require('technicalindicators').WilliamsR;
-
 const zerodhaTrade = require("../../broker/zerodha/trade");
 const utils = require("../../utils");
 const logger = require("pino")();
@@ -93,7 +91,6 @@ async function sma({ dataSymmbolModel, timeFrame, period, candleParam }) {
 async function vwap({  dataSymmbolModel, timeFrame, period, candleParam }) {
   return new Promise(async (resolve, reject) => {
     try {
-      
       let data, candleIndex;
 
       const {x , interval} = getTimeFrameStringToNum(timeFrame);

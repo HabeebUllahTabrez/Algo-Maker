@@ -69,7 +69,7 @@ async function strategyCustom(strategy) {
       await Utils.waitForTime(entryHour, entryMinute, 0);
 
       const strategyTask = cron.schedule(
-        `2 */${timeFrame} * * * *`,
+        `0 */${timeFrame} * * * *`,
         async () => {
           if (!ordered) {
             let entryOrder, exitOrder;
@@ -105,6 +105,66 @@ async function strategyCustom(strategy) {
 
               dataSymmbolModel = `${ex}_${transformedDataSymbol.toLowerCase()}_${timeFrameString}`;
             } else if (exchange === "fut_opt") {
+              let ex = "fu";
+              let optFactor;
+              let LTPOrderSymbol;
+
+              let optEvaluationArray = orderSymbol.split("_");
+              let optAddSubNumber =
+                +optEvaluationArray[optEvaluationArray.length - 1];
+              let optSymbol = optEvaluationArray[optEvaluationArray.length - 2];
+
+              if (dataSymbol.includes("BANKNIFTY")) {
+                transformedOrderSymbol = "BANKNIFTY";
+                transformedDataSymbol = "BANKNIFTY";
+                LTPOrderSymbol = "BANKNIFTY";
+                optFactor = 100;
+              } else {
+                transformedOrderSymbol = "NIFTY";
+                transformedDataSymbol = "NIFTY";
+                LTPOrderSymbol = "NIFTY";
+                optFactor = 50;
+              }
+
+                // Creating Futures order Model
+                await futureTables
+                .find({ date: { $gt: todaysDate } })
+                .sort("date")
+                .then((dates) => {
+                  let fut_name = dates[0].name.toUpperCase();
+                  transformedDataSymbol = transformedDataSymbol + fut_name;
+                  LTPOrderSymbol = "NFO:" + LTPOrderSymbol + fut_name;
+                });
+
+              // Generating the opt number
+              let optNumber = await Utils.getLTP(LTPOrderSymbol);
+              console.log("LTP: ", optNumber);
+              optNumber = Math.round(optNumber / optFactor) * optFactor;
+
+              if (optSymbol === "+") {
+                optNumber += optAddSubNumber;
+              } else if (optSymbol === "-") {
+                optNumber -= optAddSubNumber;
+              }
+
+              await optionExpiryTable
+                .find({ date: { $gt: todaysDate } })
+                .sort("date")
+                .then((dates) => {
+                  let opt_name = dates[0].name.toUpperCase();
+
+                  transformedOrderSymbol =
+                    "NFO:" +
+                    transformedOrderSymbol +
+                    opt_name +
+                    optNumber +
+                    ce_pe;
+                });
+             
+                // Analysis to be done on based on this data symbol on future
+              dataSymmbolModel = `${ex}_${transformedDataSymbol.toLowerCase()}_${timeFrameString}`;
+
+            } else if (exchange === "opt_opt") {
               let ex = "op";
               let optFactor;
               let LTPOrderSymbol;
@@ -134,26 +194,24 @@ async function strategyCustom(strategy) {
                   let fut_name = dates[0].name.toUpperCase();
                   LTPOrderSymbol = "NFO:" + LTPOrderSymbol + fut_name;
                 });
-                
- 
+
               // Generating the opt number
               let optNumber = await Utils.getLTP(LTPOrderSymbol);
               console.log("LTP: ", optNumber);
               optNumber = Math.round(optNumber / optFactor) * optFactor;
-          
+
               if (optSymbol === "+") {
                 optNumber += optAddSubNumber;
               } else if (optSymbol === "-") {
                 optNumber -= optAddSubNumber;
               }
 
-               await optionExpiryTable
+              await optionExpiryTable
                 .find({ date: { $gt: todaysDate } })
                 .sort("date")
                 .then((dates) => {
-                
                   let opt_name = dates[0].name.toUpperCase();
-                  
+
                   transformedDataSymbol =
                     transformedDataSymbol + opt_name + optNumber + ce_pe;
                   transformedOrderSymbol =
@@ -189,7 +247,7 @@ async function strategyCustom(strategy) {
 
             shouldOrder =
               (indicatorResults.every((element) => element === "BUY") ||
-              indicatorResults.every((element) => element === "SELL")) &&
+                indicatorResults.every((element) => element === "SELL")) &&
               indicatorResults.length === indicators.length;
 
             shouldBuy = indicatorResults.every((element) => element === "BUY");
@@ -212,14 +270,13 @@ async function strategyCustom(strategy) {
                     quantity,
                     orderType,
                     exchange,
-                    "Indicator entry",
+                    strategy.name,
                     pairId
                   );
                   if (!entryOrder) {
                     isError = true;
                   } else {
                     count++;
-
                     price = entryOrder.price;
                     ordered = true;
                     orderStatus = direction === "BUY" ? "Bought" : "Sold";
@@ -242,11 +299,10 @@ async function strategyCustom(strategy) {
                       quantity,
                       orderType,
                       exchange,
-                      "Indicator entry",
+                      strategy.name,
                       pairId
                     );
 
-                   
                     if (!entryOrder) {
                       isError = true;
                     } else {
@@ -267,14 +323,13 @@ async function strategyCustom(strategy) {
                   console.log(message);
                   try {
                     entryOrder = await makeOrder(
-                      
                       account,
                       transformedOrderSymbol,
                       "SELL",
                       quantity,
                       orderType,
                       exchange,
-                      "Indicator entry",
+                      strategy.name,
                       pairId
                     );
                     if (!entryOrder) {
@@ -346,8 +401,8 @@ async function strategyCustom(strategy) {
           strategyTask.stop();
           clearInterval(timeInterval);
         } else if (
-          (currentTime.getHours() >= exitHour &&
-            currentTime.getMinutes() >= exitMinute)
+          currentTime.getHours() >= exitHour &&
+          currentTime.getMinutes() >= exitMinute
         ) {
           Utils.print("Strategy exitted");
           strategyTask.stop();
@@ -365,8 +420,8 @@ async function strategyCustom(strategy) {
       let currentTime = new Date();
 
       if (
-        (currentTime.getHours() >= exitHour &&
-          currentTime.getMinutes() >= exitMinute)
+        currentTime.getHours() >= exitHour &&
+        currentTime.getMinutes() >= exitMinute
       ) {
         Utils.print("Strategy exitted");
         strategyTask.stop();
@@ -491,10 +546,8 @@ const getBuySellArray = async (
       if (direction === "BUY") {
         // Buy direction
         if (operator1 === "greater") {
-         
           indicatorResults.push(result > buyValue ? "BUY" : "None");
         } else if (operator1 === "less") {
-         
           indicatorResults.push(result < buyValue ? "BUY" : "None");
         } else if (operator1 === "crossabove") {
           indicatorResults.push(
