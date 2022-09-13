@@ -13,9 +13,9 @@ async function strategyCustom(strategy) {
     try {
       // console.log(strategy);
       Utils.print("Strategy started: ", strategy.name);
-
+      
       let entryTime = new Date(strategy.entryTime);
-
+      const strategyName = strategy.name;
       const entryHour = entryTime.getHours();
       const entryMinute = entryTime.getMinutes();
 
@@ -270,7 +270,7 @@ async function strategyCustom(strategy) {
                     quantity,
                     orderType,
                     exchange,
-                    strategy.name,
+                    strategyName,
                     pairId,
                     ce_pe
                   );
@@ -301,7 +301,7 @@ async function strategyCustom(strategy) {
                       quantity,
                       orderType,
                       exchange,
-                      strategy.name,
+                      strategyName,
                       pairId,
                       ce_pe
                     );
@@ -332,7 +332,7 @@ async function strategyCustom(strategy) {
                       quantity,
                       orderType,
                       exchange,
-                      strategy.name,
+                      strategyName,
                       pairId,
                       ce_pe
                     );
@@ -381,6 +381,7 @@ async function strategyCustom(strategy) {
                   orderStatus,
                   pairId,
                   indicators,
+                  strategyName,
                   ce_pe
                 );
 
@@ -621,6 +622,7 @@ async function checkForSLandTarget(
   orderStatus,
   pairId,
   indicators,
+  strategyName,
   ce_pe
 ) {
   return new Promise(async (resolve, reject) => {
@@ -743,7 +745,7 @@ async function checkForSLandTarget(
               quantity,
               orderType,
               exchange,
-              "Exit Time Reached",
+              strategyName,
               pairId,
               ce_pe
             );
@@ -757,7 +759,7 @@ async function checkForSLandTarget(
               quantity,
               orderType,
               exchange,
-              "Exit Time Reached",
+              strategyName,
               pairId,
               ce_pe
             );
@@ -777,7 +779,7 @@ async function checkForSLandTarget(
                 quantity,
                 orderType,
                 exchange,
-                "Stoploss Hit",
+                strategyName,
                 pairId,
                 ce_pe
               );
@@ -797,7 +799,7 @@ async function checkForSLandTarget(
                 quantity,
                 orderType,
                 exchange,
-                "Target Hit",
+                strategyName,
                 pairId,
                 ce_pe
               );
@@ -843,7 +845,7 @@ async function checkForSLandTarget(
                   quantity,
                   orderType,
                   exchange,
-                  "Indicator Exit",
+                  strategyName,
                   pairId,
                   ce_pe
                 );
@@ -867,7 +869,7 @@ async function checkForSLandTarget(
                 quantity,
                 orderType,
                 exchange,
-                "Stoploss Hit",
+                strategyName,
                 pairId,
                 ce_pe
               );
@@ -887,7 +889,7 @@ async function checkForSLandTarget(
                 quantity,
                 orderType,
                 exchange,
-                "Target Hit",
+                strategyName,
                 pairId,
                 ce_pe
               );
@@ -933,7 +935,7 @@ async function checkForSLandTarget(
                   quantity,
                   orderType,
                   exchange,
-                  "Indicator Exit",
+                  strategyName,
                   pairId,
                   ce_pe
                 );
