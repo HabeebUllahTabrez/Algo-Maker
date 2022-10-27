@@ -52,7 +52,7 @@ module.exports = function (io) {
   });
 
 
-  var AUTH_TYPE = "pin";
+  var AUTH_TYPE = "totp";
   function ticks() {
     console.log("inside");
     var cacheData = {};
