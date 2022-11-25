@@ -26,7 +26,7 @@ async function waitForXseconds(x){
 function getParams(){
     return new Promise( async (resolve,reject)=>{
         try{  
-            let paramsObj = await params.findById("627b6b4eba0b94ea14f96932");
+            let paramsObj = await params.findById("637c4d3c97bc0e7a4c38b22c");
 
             let parsedObj = {
                 userID  : paramsObj['userID'],
