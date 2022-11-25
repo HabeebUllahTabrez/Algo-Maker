@@ -233,7 +233,7 @@ module.exports = function (io) {
         todaysDate.setHours(0, 0, 0, 0);
         const futuresDataAccess = new Promise((resolve, reject) => {
           futureTables
-            .find({ date: { $gt: todaysDate } })
+            .find({ date: { $gte: todaysDate } })
             .sort("date")
             .then((dates) => {
               let fut_name = dates[0].name.toUpperCase();
