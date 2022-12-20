@@ -9,15 +9,15 @@ const options = mongoose.model("options");
 const optionExpiryTable = mongoose.model("optionExpiryTable");
 const optionsData = mongoose.model("optionsData");
 const userSchema = mongoose.model("Users");
-const getModel = require('../../models/createCandleModel')
-const candles = require('./candles')
+const getModel = require("../../models/createCandleModel");
+const candles = require("./candles");
 const { spawn } = require("child_process");
 const request = require("request");
 var cron = require("node-cron");
 const express = require("express");
 const app = express();
 const WebSocket = require("ws");
-require("socket.io")
+require("socket.io");
 const dateFormater = (time) => {
   time.setHours(time.getHours() + 5, time.getMinutes() + 30);
   time.setSeconds(0, 0);
@@ -47,17 +47,17 @@ module.exports = function (io) {
           )
           .then((data) => {
             console.log(data);
-          }).catch((error) => console.log(error))
+          })
+          .catch((error) => console.log(error));
     });
   });
-
 
   var AUTH_TYPE = "totp";
   function ticks() {
     console.log("inside");
     var cacheData = {};
     admin.findOne({ auth_type: AUTH_TYPE }).then((data) => {
-      console.log(data)
+      console.log(data);
       // Future tick web socket
       var tickerFutures = new KiteTicker({
         api_key: data.apikey,
@@ -142,8 +142,6 @@ module.exports = function (io) {
         }
       );
 
-
-
       function onTicksFutures(ticksFutures) {
         function updateFutureMinutes({ resolve, reject, tick }) {
           let currentTime = new Date(tick.exchange_timestamp || new Date());
@@ -181,39 +179,54 @@ module.exports = function (io) {
             currentTime.getSeconds() == 59
           ) {
             // console.log("Ending: ", tick)
-            var future = "any"
+            var future = "any";
             futures
               .find({
-                instrument_token: tick.instrument_token
-              }).then((data) => {
-                future = data.map((val) => val.future)[0].slice(4,).toLowerCase()
+                instrument_token: tick.instrument_token,
+              })
+              .then((data) => {
+                future = data
+                  .map((val) => val.future)[0]
+                  .slice(4)
+                  .toLowerCase();
                 // if (future === "nifty") {
                 // }
-                let model = `fu_${future}_1min`
-                getModel(model.toString()).findOneAndUpdate({
-                  instrument_token: tick.instrument_token,
-                  minute: cacheData[tick.instrument_token].minute
-                }, {
-                  instrument_token: tick.instrument_token,
-                  minute: cacheData[tick.instrument_token].minute,
-                  open: cacheData[tick.instrument_token].open,
-                  high: cacheData[tick.instrument_token].high,
-                  low: cacheData[tick.instrument_token].low,
-                  close: tick.last_price,
-                  volume: tick.volume_traded - cacheData[tick.instrument_token].volume,
-                  oi: tick.oi,
-                }, {
-                  new: true,
-                  upsert: true
-                }).then(data => {
-                  console.log("Last Input for Futures: in minute", data)
-                  candles("fu", future, tick.instrument_token, 5)
-                  candles("fu", future, tick.instrument_token, 15)
-                  candles("fu", future, tick.instrument_token, 30)
-                  candles("fu", future, tick.instrument_token, 60)
-                })
-              })
-
+                let model = `fu_${future}_1min`;
+                getModel(model.toString())
+                  .findOneAndUpdate(
+                    {
+                      instrument_token: tick.instrument_token,
+                      minute: cacheData[tick.instrument_token].minute,
+                    },
+                    {
+                      instrument_token: tick.instrument_token,
+                      minute: cacheData[tick.instrument_token].minute,
+                      open: cacheData[tick.instrument_token].open,
+                      high: cacheData[tick.instrument_token].high,
+                      low: cacheData[tick.instrument_token].low,
+                      close: tick.last_price,
+                      volume:
+                        tick.volume_traded -
+                        cacheData[tick.instrument_token].volume,
+                      oi: tick.oi,
+                    },
+                    {
+                      new: true,
+                      upsert: true,
+                    }
+                  )
+                  .then((data) => {
+                    console.log("Last Input for Futures: in minute", data);
+                    candles("fu", future, tick.instrument_token, 2);
+                    candles("fu", future, tick.instrument_token, 3);
+                    candles("fu", future, tick.instrument_token, 4);
+                    candles("fu", future, tick.instrument_token, 5);
+                    candles("fu", future, tick.instrument_token, 10);
+                    candles("fu", future, tick.instrument_token, 15);
+                    candles("fu", future, tick.instrument_token, 30);
+                    candles("fu", future, tick.instrument_token, 60);
+                  });
+              });
           }
         }
         var updatePromise = ticksFutures.map((tick) => {
@@ -226,7 +239,6 @@ module.exports = function (io) {
       }
 
       function subscribeFutures() {
-
         // access todays date
         const todaysDate = new Date();
         // set todays date to 12:00 midnight
@@ -248,9 +260,9 @@ module.exports = function (io) {
                   },
                 })
                 .then((data) => {
-                  console.log(data)
+                  console.log(data);
                   var commodities = data.map((val) => val.instrument_token);
-                  console.log(commodities)
+                  console.log(commodities);
                   resolve(commodities);
                 });
             });
@@ -293,36 +305,56 @@ module.exports = function (io) {
             cacheData[tick.instrument_token] &&
             currentTime.getSeconds() == 59
           ) {
-            let option = 'any'
-            options.find({
-              instrument_token: tick.instrument_token
-            }).then((data) => {
-              // console.log(data)
-              option = data.map((val) => val.option)[0].slice(4,).toLowerCase()
-              console.log(option)
-              // if (future === "nifty") {
-              // }
-              let model = `op_${option}_1min`
-              getModel(model.toString()).findOneAndUpdate({
+            let option = "any";
+            options
+              .find({
                 instrument_token: tick.instrument_token,
-                minute: cacheData[tick.instrument_token].minute
-              }, {
-                instrument_token: tick.instrument_token,
-                minute: cacheData[tick.instrument_token].minute,
-                open: cacheData[tick.instrument_token].open,
-                high: cacheData[tick.instrument_token].high,
-                low: cacheData[tick.instrument_token].low,
-                close: tick.last_price,
-                volume: tick.volume_traded - cacheData[tick.instrument_token].volume,
-                oi: tick.oi,
-              }, {
-                new: true,
-                upsert: true
-              }).then(data => {
-                console.log("Last Input for Options: in minute ", data)
-                candles("op", option, tick.instrument_token, 5)
               })
-            })
+              .then((data) => {
+                // console.log(data)
+                option = data
+                  .map((val) => val.option)[0]
+                  .slice(4)
+                  .toLowerCase();
+                console.log(option);
+                // if (future === "nifty") {
+                // }
+                let model = `op_${option}_1min`;
+                getModel(model.toString())
+                  .findOneAndUpdate(
+                    {
+                      instrument_token: tick.instrument_token,
+                      minute: cacheData[tick.instrument_token].minute,
+                    },
+                    {
+                      instrument_token: tick.instrument_token,
+                      minute: cacheData[tick.instrument_token].minute,
+                      open: cacheData[tick.instrument_token].open,
+                      high: cacheData[tick.instrument_token].high,
+                      low: cacheData[tick.instrument_token].low,
+                      close: tick.last_price,
+                      volume:
+                        tick.volume_traded -
+                        cacheData[tick.instrument_token].volume,
+                      oi: tick.oi,
+                    },
+                    {
+                      new: true,
+                      upsert: true,
+                    }
+                  )
+                  .then((data) => {
+                    console.log("Last Input for Options: in minute ", data);
+                    candles("op", option, tick.instrument_token, 2);
+                    candles("op", option, tick.instrument_token, 3);
+                    candles("op", option, tick.instrument_token, 4);
+                    candles("op", option, tick.instrument_token, 5);
+                    candles("op", option, tick.instrument_token, 10);
+                    candles("op", option, tick.instrument_token, 15);
+                    candles("op", option, tick.instrument_token, 30);
+                    candles("op", option, tick.instrument_token, 60);
+                  });
+              });
             // optionsData.findOneAndUpdate({
             //     instrument_token: tick.instrument_token,
             //     minute: cacheData[tick.instrument_token].minute
@@ -373,7 +405,7 @@ module.exports = function (io) {
                 // .select("-minutes")
                 .then((data) => {
                   var commodities = data.map((val) => val.instrument_token);
-                  console.log(commodities)
+                  console.log(commodities);
                   resolve(commodities);
                 });
             });
@@ -657,5 +689,4 @@ module.exports = function (io) {
   // cryptoTicks();
 
   ticks();
-
 };
